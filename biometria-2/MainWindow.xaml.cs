@@ -42,7 +42,10 @@ namespace biometria_2
                 this.sourceImage = new Bitmap($"{fileName}");
                 OriginalImage.Source = ImageSourceFromBitmap(this.sourceImage);
                 histogramValues = Algorithm.getHistogramData(new Bitmap($"{fileName}"));
-                HistogramImage.Source = ImageSourceFromBitmap(Algorithm.Histogram(new Bitmap($"{fileName}"), histogramValues));
+                HistogramImage.Source = ImageSourceFromBitmap(Algorithm.Histogram(this.sourceImage.Width, this.sourceImage.Height, histogramValues));
+                int[] LUT = Algorithm.calculateLUT(histogramValues);
+                StretchedHistogram.Source = ImageSourceFromBitmap(Algorithm.StretchedHistogram(new Bitmap($"{fileName}"), LUT));
+
             }
         }
 
