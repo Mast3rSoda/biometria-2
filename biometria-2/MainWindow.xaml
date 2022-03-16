@@ -16,6 +16,7 @@
             </MenuItem>
             <MenuItem Header="_Actions">
                 <MenuItem Header="_Even Out" Click="EqualHistogram" />
+                <MenuItem Header="_Stretch" Click="StretchedHistogram" />
                 <Separator />
                 <MenuItem Header="_Exit" Click="Exit" />
             </MenuItem>
@@ -23,7 +24,7 @@
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="4*"></ColumnDefinition>
-                <ColumnDefinition Width="4*"></ColumnDefinition>
+                <ColumnDefinition Width="3*"></ColumnDefinition>
                 <ColumnDefinition Width="3*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>

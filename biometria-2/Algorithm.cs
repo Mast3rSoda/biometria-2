@@ -64,9 +64,9 @@ public static class Algorithm
             if ((i) % 3 == 0)
                 ++histogramB[bmpData[i]];
             if ((i + 2) % 3 == 0)
-                ++histogramR[bmpData[i]];
-            if ((i + 1) % 3 == 0)
                 ++histogramG[bmpData[i]];
+            if ((i + 1) % 3 == 0)
+                ++histogramR[bmpData[i]];
         }
         double max = histogram.Max();
         double maxB = histogramB.Max();
@@ -246,22 +246,26 @@ public static class Algorithm
 
     public static Bitmap StretchedHistogram(Bitmap bmp, WpfPlot plot)
     {
-        int[] LUT = calculateLUT(getHistogramData(bmp, null)[0]);
-        Bitmap newBmp = new Bitmap(bmp.Width, bmp.Height);
-        for (int x = 0; x < bmp.Width; x++)
-        {
-            for (int y = 0; y < bmp.Height; y++)
-            {
-                Color pixel = bmp.GetPixel(x, y);
-                Color newPixel = Color.FromArgb(LUT[(pixel.R + pixel.G + pixel.B) / 3]);
-                newBmp.SetPixel(x, y, newPixel);
-            }
-        }
+        double[][] histogramsData = getHistogramData(bmp, null);
+        int[] LUTblue = calculateLUT(histogramsData[1]);
+        int[] LUTgreen = calculateLUT(histogramsData[2]);
+        int[] LUTred = calculateLUT(histogramsData[3]);
+
+        //Bitmap newBmp = new Bitmap(bmp.Width, bmp.Height);
+        //for (int x = 0; x < bmp.Width; x++)
+        //{
+        //    for (int y = 0; y < bmp.Height; y++)
+        //    {
+        //        Color pixel = bmp.GetPixel(x, y);
+        //        Color newPixel = Color.FromArgb(LUTred[pixel.R], LUTgreen[pixel.G], LUTblue[pixel.B]);
+        //        newBmp.SetPixel(x, y, newPixel);
+        //    }
+        //}
         unsafe
         {
             BitmapData bitmapData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, bmp.PixelFormat);
 
-            int bytesPerPixel = System.Drawing.Bitmap.GetPixelFormatSize(bmp.PixelFormat) / 8;
+            int bytesPerPixel = Image.GetPixelFormatSize(bmp.PixelFormat) / 8;
             int heightInPixels = bitmapData.Height;
             int widthInBytes = bitmapData.Width * bytesPerPixel;
             byte* PtrFirstPixel = (byte*)bitmapData.Scan0;
@@ -272,11 +276,9 @@ public static class Algorithm
                 byte* currentLine = PtrFirstPixel + (y * bitmapData.Stride);
                 for (int x = 0; x < widthInBytes; x += bytesPerPixel)
                 {
-                    var color = Color.FromArgb(LUT[(currentLine[x] + currentLine[x + 1] + currentLine[x + 2]) / 3]);
-                    byte[] byteData = new byte[3] {color.R, color.G, color.B};
-                    currentLine[x] = (byte)byteData[2];
-                    currentLine[x + 1] = (byte)byteData[1];
-                    currentLine[x + 2] = (byte)byteData[0];
+                    currentLine[x] = (byte)LUTblue[currentLine[x]];
+                    currentLine[x + 1] = (byte)LUTgreen[currentLine[x + 1]];
+                    currentLine[x + 2] = (byte)LUTred[currentLine[x + 2]];
                 }
             });
             bmp.UnlockBits(bitmapData);
