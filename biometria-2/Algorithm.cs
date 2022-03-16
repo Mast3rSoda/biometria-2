@@ -208,7 +208,7 @@ public static class Algorithm
         return NewBitmap;
     }
 
-    public static int[] calculateLUT(double[] values, int thresholdValue, int minval)
+    public static int[] calculateLUT(double[] values, double thresholdValue, double minval)
     {
         //poszukaj wartości minimalnej
         int minValue = 0;
@@ -234,16 +234,16 @@ public static class Algorithm
 
         //przygotuj tablice zgodnie ze wzorem
         int[] result = new int[256];
-        double a = 255.0 / (thresholdValue - minval);
+        double a = thresholdValue / (maxValue - minValue);
         for (int i = 0; i < 256; i++)
         {
-            result[i] = (int)(a * (i - minval));
+            result[i] = (int)(a * (i - minValue));
         }
 
         return result;
     }
 
-    public static Bitmap StretchedHistogram(Bitmap bmp, WpfPlot plot, int value=256, int value2=0)
+    public static Bitmap StretchedHistogram(Bitmap bmp, WpfPlot plot, double value=256, double value2=0)
     {
         double[][] histogramsData = getHistogramData(bmp, null);
         int[] LUTblue = calculateLUT(histogramsData[1],value, value2);

@@ -131,7 +131,7 @@ namespace biometria_2
             }
             Bitmap bitmap = new Bitmap(this.sourceImage.Width, this.sourceImage.Height);
             bitmap = (Bitmap)this.imageToEdit.Clone();
-            newImage.Source = ImageSourceFromBitmap(Algorithm.StretchedHistogram(bitmap, newHistPlot, (int)ZakresValue.Value, (int)ZakresLowValue.Value));
+            newImage.Source = ImageSourceFromBitmap(Algorithm.StretchedHistogram(bitmap, newHistPlot, (double)ZakresValue.Value, (double)ZakresLowValue.Value));
         }
     }
 
