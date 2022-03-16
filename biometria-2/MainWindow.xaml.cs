@@ -25,7 +25,8 @@ namespace biometria_2
     public partial class MainWindow : Window
     {
         Bitmap? sourceImage = null;
-        int[]? histogramValues = null;
+        Bitmap? imageToEdit = null;
+        double[]? histogramValues = null;
         public MainWindow()
         {
             InitializeComponent();
@@ -39,10 +40,11 @@ namespace biometria_2
             if (openFileDialog.ShowDialog() == true)
             {
                 string fileName = openFileDialog.FileName;
-                this.sourceImage = new Bitmap($"{fileName}");
+                imageToEdit = this.sourceImage = new Bitmap($"{fileName}");
                 OriginalImage.Source = ImageSourceFromBitmap(this.sourceImage);
-                histogramValues = Algorithm.getHistogramData(new Bitmap($"{fileName}"));
-                HistogramImage.Source = ImageSourceFromBitmap(Algorithm.Histogram(new Bitmap($"{fileName}"), histogramValues));
+                _= Algorithm.getHistogramData(new Bitmap($"{fileName}"), histPlot);
+                //HistogramImage.Source = ImageSourceFromBitmap(Algorithm.Histogram(new Bitmap($"{fileName}"), histogramValues));
+                
             }
         }
 
@@ -63,6 +65,30 @@ namespace biometria_2
         private void Exit(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private void EvenHistogram(object sender, RoutedEventArgs e)
+        {
+            if (sourceImage == null)
+            {
+                MessageBox.Show("You haven't uploaded any files", "Image error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            Bitmap bitmap = new Bitmap(this.sourceImage.Width, this.sourceImage.Height);
+            bitmap = (Bitmap)this.imageToEdit.Clone();
+            newImage.Source = ImageSourceFromBitmap(Algorithm.EqualizeHistogram(bitmap, newHistPlot));
+        }
+
+        private void BrightnessValue_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (sourceImage == null)
+            {
+                MessageBox.Show("You haven't uploaded any files", "Image error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            imageToEdit = Algorithm.AdjustBrightness(this.sourceImage, (int)BrightnessValue.Value);
+            OriginalImage.Source = ImageSourceFromBitmap(imageToEdit);
+            _ = Algorithm.getHistogramData(imageToEdit, histPlot);
         }
     }
 
