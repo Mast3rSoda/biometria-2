@@ -103,9 +103,19 @@ namespace biometria_2
                 MessageBox.Show("You haven't uploaded any files", "Image error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
             imageToEdit = Algorithm.AdjustBrightness(this.sourceImage, (int)BrightnessValue.Value);
             OriginalImage.Source = ImageSourceFromBitmap(imageToEdit);
             _ = Algorithm.getHistogramData(imageToEdit, histPlot);
+        }
+
+        private void Otsu(object sender, RoutedEventArgs e)
+        {
+            if (sourceImage == null)
+            {
+                MessageBox.Show("You haven't uploaded any files", "Image error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
         }
     }
 

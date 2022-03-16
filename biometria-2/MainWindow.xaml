@@ -15,9 +15,11 @@
                 <MenuItem Header="_Exit" Click="Exit" />
             </MenuItem>
             <MenuItem Header="_Actions">
-                <MenuItem Header="_Even Out" Click="EqualHistogram" />
+                <MenuItem Header="_Equalize" Click="EqualHistogram" />
                 <Separator />
-                <MenuItem Header="_Exit" Click="Exit" />
+                <MenuItem Header="_Stretch" Click="StretchedHistogram" />
+                <Separator />
+                <MenuItem Header="_Otsu" Click="Otsu" />
             </MenuItem>
         </Menu>
         <Grid>
