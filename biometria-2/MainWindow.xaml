@@ -16,16 +16,14 @@
             </MenuItem>
             <MenuItem Header="_Actions">
                 <MenuItem Header="_Equalize" Click="EqualHistogram" />
-                <Separator />
                 <MenuItem Header="_Stretch" Click="StretchedHistogram" />
-                <Separator />
                 <MenuItem Header="_Otsu" Click="Otsu" />
             </MenuItem>
         </Menu>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="4*"></ColumnDefinition>
-                <ColumnDefinition Width="4*"></ColumnDefinition>
+                <ColumnDefinition Width="5*"></ColumnDefinition>
+                <ColumnDefinition Width="3*"></ColumnDefinition>
                 <ColumnDefinition Width="3*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>

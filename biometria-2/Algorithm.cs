@@ -64,9 +64,9 @@ public static class Algorithm
             if ((i) % 3 == 0)
                 ++histogramB[bmpData[i]];
             if ((i + 2) % 3 == 0)
-                ++histogramR[bmpData[i]];
-            if ((i + 1) % 3 == 0)
                 ++histogramG[bmpData[i]];
+            if ((i + 1) % 3 == 0)
+                ++histogramR[bmpData[i]];
         }
         double max = histogram.Max();
         for (int i = 0; i < histogram.Length; i++)
@@ -115,11 +115,10 @@ public static class Algorithm
 
         int[] result = new int[256];
         int sum = 0;
-        size /= 20;
         for (int i = 0; i < 256; i++)
         {
             sum += (int)values[i];
-            result[i] = (int)((sum - minValue) / (size - minValue) * 255); //daje dobre efekty dla * size/500 zamiast 255, ale tylko dla czarnobiałych obrazów (normalnie jest 255.0)
+            result[i] = (int)((sum - minValue) / (size - minValue) * 255);//daje dobre efekty dla * size/500 zamiast 255, ale tylko dla czarnobiałych obrazów (normalnie jest 255.0)
         }
 
         return result;

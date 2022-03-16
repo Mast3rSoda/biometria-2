@@ -81,7 +81,7 @@ namespace biometria_2
             }
             Bitmap bitmap = new Bitmap(this.sourceImage.Width, this.sourceImage.Height);
             bitmap = (Bitmap)this.imageToEdit.Clone();
-            newImage.Source = ImageSourceFromBitmap(Algorithm.EqualizeHistogram(bitmap, newHistPlot));
+            newImage.Source = ImageSourceFromBitmap(Algorithm.EqualizeHistogram( bitmap, newHistPlot));
         }
 
         private void StretchedHistogram(object sender, RoutedEventArgs e)
