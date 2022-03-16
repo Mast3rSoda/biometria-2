@@ -69,15 +69,12 @@ public static class Algorithm
                 ++histogramR[bmpData[i]];
         }
         double max = histogram.Max();
-        double maxB = histogramB.Max();
-        double maxR = histogramR.Max();
-        double maxG = histogramG.Max();
         for (int i = 0; i < histogram.Length; i++)
         {
             histogram[i] = (double)(histogram[i] / max * (double)data.Height);
-            histogramB[i] = (double)(histogramB[i] / maxB * (double)data.Height);
-            histogramR[i] = (double)(histogramR[i] / maxR * (double)data.Height);
-            histogramG[i] = (double)(histogramG[i] / maxG * (double)data.Height);
+            histogramB[i] = (double)(histogramB[i] / max * (double)data.Height);
+            histogramR[i] = (double)(histogramR[i] / max * (double)data.Height);
+            histogramG[i] = (double)(histogramG[i] / max * (double)data.Height);
 
         }
 
@@ -121,7 +118,7 @@ public static class Algorithm
         for (int i = 0; i < 256; i++)
         {
             sum += (int)values[i];
-            result[i] = (int)((sum - minValue) / (size - minValue) * 255); //daje dobre efekty dla * size/500 zamiast 255, ale tylko dla czarnobiałych obrazów (normalnie jest 255.0)
+            result[i] = (int)((sum - minValue) / (size - minValue) * 255);//daje dobre efekty dla * size/500 zamiast 255, ale tylko dla czarnobiałych obrazów (normalnie jest 255.0)
         }
 
         return result;
@@ -160,7 +157,7 @@ public static class Algorithm
             bitmap.UnlockBits(bitmapData);
             _ = getHistogramData(bitmap, histPlost);
             return bitmap;
-            /*for (int y = 0; y < heightInPixels; y++)
+            for (int y = 0; y < heightInPixels; y++)
             {
                 byte* currentLine = PtrFirstPixel + (y * bitmapData.Stride);
                 for (int x = 0; x < widthInBytes; x = x + bytesPerPixel)
@@ -169,20 +166,20 @@ public static class Algorithm
                     currentLine[x + 1] = (byte)LUTgreen[currentLine[x + 1]];
                     currentLine[x + 2] = (byte)LUTred[currentLine[x + 2]];
                 }
-            }*/
+            }
         }
-        //gówno.... tak było oryginalnie
-        /* Bitmap newBitmap = new Bitmap(bitmap.Width, bitmap.Height, PixelFormat.Format24bppRgb);
-         for (int x = 0; x < bitmap.Width; x++)
+    //gówno.... tak było oryginalnie
+    Bitmap newBitmap = new Bitmap(bitmap.Width, bitmap.Height, PixelFormat.Format24bppRgb);
+         for (int x = 0; x<bitmap.Width; x++)
          {
-             for (int y = 0; y < bitmap.Height; y++)
+             for (int y = 0; y<bitmap.Height; y++)
              {
                  Color pixel = bitmap.GetPixel(x, y);
-                 Color newPixel = Color.FromArgb(LUTred[pixel.R], LUTgreen[pixel.G], LUTblue[pixel.B]);
-                 newBitmap.SetPixel(x, y, newPixel);
+    Color newPixel = Color.FromArgb(LUTred[pixel.R], LUTgreen[pixel.G], LUTblue[pixel.B]);
+    newBitmap.SetPixel(x, y, newPixel);
              }
          }
-         return newBitmap;*/
+         return newBitmap;
 
     }
 
