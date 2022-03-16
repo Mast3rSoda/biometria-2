@@ -5,28 +5,23 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace biometria_2;
 
 public static class Algorithm
 {
-    public static Bitmap Histogram(Bitmap bmp, int[] histogram)
+    public static Bitmap Histogram(int width, int height, int[] histogram)
     {
-        var data = bmp.LockBits(
-            new Rectangle(0, 0, bmp.Width, bmp.Height),
-            System.Drawing.Imaging.ImageLockMode.ReadWrite,
-            System.Drawing.Imaging.PixelFormat.Format24bppRgb
-        );
-        var bmpData = new byte[data.Stride * data.Height];
+
+        var bmpData = new byte[width * 3 * height];
+
         for (int i = 0; i < bmpData.Length; i++)
             bmpData[i] = 255;
         for (int i = 0; i < histogram.Length; i++)
         {
             for (int j = 0; j < histogram[i]; j++)
             {
-                int index = i * 3 + (data.Height - 1 - j) * data.Stride;
+                int index = i * 3 + (height - 1 - j) * width*3;
 
                 bmpData[index + 0] =
                 bmpData[index + 1] =
@@ -34,11 +29,14 @@ public static class Algorithm
             }
         }
 
-        Marshal.Copy(bmpData, 0, data.Scan0, bmpData.Length);
-        // Przerzuci z tablicy do Bitmapy
+        Bitmap data = new Bitmap(width, height, PixelFormat.Format24bppRgb);
+        BitmapData bmpD = data.LockBits(
+                       new Rectangle(0, 0, data.Width, data.Height),
+                       ImageLockMode.ReadWrite, data.PixelFormat);
+        Marshal.Copy(bmpData, 0, bmpD.Scan0, bmpData.Length);
+        data.UnlockBits(bmpD);
 
-        bmp.UnlockBits(data);
-        return bmp;
+        return data;
     }
 
     public static double[][] getHistogramData(Bitmap bmp, WpfPlot? histPlot)
@@ -202,12 +200,53 @@ public static class Algorithm
                      new float[] {FinalValue, FinalValue, FinalValue, 1, 1}
                  };
 
-        System.Drawing.Imaging.ColorMatrix NewColorMatrix = new ColorMatrix(FloatColorMatrix);
-        System.Drawing.Imaging.ImageAttributes Attributes = new ImageAttributes();
-        Attributes.SetColorMatrix(NewColorMatrix);
-        NewGraphics.DrawImage(TempBitmap, new System.Drawing.Rectangle(0, 0, TempBitmap.Width, TempBitmap.Height), 0, 0, TempBitmap.Width, TempBitmap.Height, System.Drawing.GraphicsUnit.Pixel, Attributes);
-        Attributes.Dispose();
-        NewGraphics.Dispose();
-        return NewBitmap;
+    public static int[] calculateLUT(int[] values)
+    {
+        //poszukaj wartości minimalnej
+        int minValue = 0;
+        for (int i = 0; i < 256; i++)
+        {
+            if (values[i] != 0)
+            {
+                minValue = i;
+                break;
+            }
+        }
+
+        //poszukaj wartości maksymalnej
+        int maxValue = 255;
+        for (int i = 255; i >= 0; i--)
+        {
+            if (values[i] != 0)
+            {
+                maxValue = i;
+                break;
+            }
+        }
+
+        //przygotuj tablice zgodnie ze wzorem
+        int[] result = new int[256];
+        double a = 255.0 / (maxValue - minValue);
+        for (int i = 0; i < 256; i++)
+        {
+            result[i] = (int)(a * (i - minValue));
+        }
+
+        return result;
+    }
+
+    public static Bitmap StretchedHistogram(Bitmap bmp, int[] LUT)
+    {
+        Bitmap newBmp = new Bitmap(bmp.Width, bmp.Height);
+        for (int x = 0; x < bmp.Width; x++)
+        {
+            for (int y = 0; y < bmp.Height; y++)
+            {
+                Color pixel = bmp.GetPixel(x, y);
+                Color newPixel = Color.FromArgb(LUT[(pixel.R + pixel.G + pixel.B) / 3]);
+                newBmp.SetPixel(x, y, newPixel);
+            }
+        }
+        return Histogram(newBmp.Width, newBmp.Height, getHistogramData(newBmp));
     }
 }
