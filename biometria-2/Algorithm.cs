@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace biometria_2;
 
@@ -89,7 +90,7 @@ public static class Algorithm
         bmp.UnlockBits(data);
 
         if (histPlot == null)
-            return new double[][] { histogram, histogramB, histogramR, histogramG };
+            return new double[][] { histogram, histogramB, histogramG, histogramR };
 
         histPlot.Reset();
         histPlot.Plot.AddScatter(xRow, histogram, Color.Black);
@@ -98,7 +99,7 @@ public static class Algorithm
         histPlot.Plot.AddScatter(xRow, histogramG, Color.Green);
 
         histPlot.Refresh();
-        return new double[][] { histogram, histogramB, histogramR, histogramG };
+        return new double[][] { histogram, histogramB, histogramG, histogramR };
     }
 
     #region wyrownanie histogramu
@@ -131,9 +132,9 @@ public static class Algorithm
     public static Bitmap EqualizeHistogram(Bitmap bitmap, WpfPlot histPlost)
     {
         double[][] histogramsData = getHistogramData(bitmap, null);
-        int[] LUTblue = CalculateEqualLUT(histogramsData[0], bitmap.Width * bitmap.Height);
-        int[] LUTred = CalculateEqualLUT(histogramsData[1], bitmap.Width * bitmap.Height);
+        int[] LUTblue = CalculateEqualLUT(histogramsData[1], bitmap.Width * bitmap.Height);
         int[] LUTgreen = CalculateEqualLUT(histogramsData[2], bitmap.Width * bitmap.Height);
+        int[] LUTred = CalculateEqualLUT(histogramsData[3], bitmap.Width * bitmap.Height);
 
 
         unsafe
@@ -146,16 +147,6 @@ public static class Algorithm
             byte* PtrFirstPixel = (byte*)bitmapData.Scan0;
 
 
-            /*for (int y = 0; y < heightInPixels; y++)
-            {
-                byte* currentLine = PtrFirstPixel + (y * bitmapData.Stride);
-                for (int x = 0; x < widthInBytes; x = x + bytesPerPixel)
-                {
-                    currentLine[x] = (byte)LUTblue[currentLine[x]];
-                    currentLine[x + 1] = (byte)LUTgreen[currentLine[x + 1]];
-                    currentLine[x + 2] = (byte)LUTred[currentLine[x + 2]];
-                }
-            }*/
             Parallel.For(0, heightInPixels, y =>
             {
                 byte* currentLine = PtrFirstPixel + (y * bitmapData.Stride);
@@ -169,6 +160,16 @@ public static class Algorithm
             bitmap.UnlockBits(bitmapData);
             _ = getHistogramData(bitmap, histPlost);
             return bitmap;
+            /*for (int y = 0; y < heightInPixels; y++)
+            {
+                byte* currentLine = PtrFirstPixel + (y * bitmapData.Stride);
+                for (int x = 0; x < widthInBytes; x = x + bytesPerPixel)
+                {
+                    currentLine[x] = (byte)LUTblue[currentLine[x]];
+                    currentLine[x + 1] = (byte)LUTgreen[currentLine[x + 1]];
+                    currentLine[x + 2] = (byte)LUTred[currentLine[x + 2]];
+                }
+            }*/
         }
         //gówno.... tak było oryginalnie
         /* Bitmap newBitmap = new Bitmap(bitmap.Width, bitmap.Height, PixelFormat.Format24bppRgb);
@@ -199,8 +200,16 @@ public static class Algorithm
                      new float[] {0, 0, 0, 1, 0},
                      new float[] {FinalValue, FinalValue, FinalValue, 1, 1}
                  };
+        System.Drawing.Imaging.ColorMatrix NewColorMatrix = new ColorMatrix(FloatColorMatrix);
+        System.Drawing.Imaging.ImageAttributes Attributes = new ImageAttributes();
+        Attributes.SetColorMatrix(NewColorMatrix);
+        NewGraphics.DrawImage(TempBitmap, new System.Drawing.Rectangle(0, 0, TempBitmap.Width, TempBitmap.Height), 0, 0, TempBitmap.Width, TempBitmap.Height, System.Drawing.GraphicsUnit.Pixel, Attributes);
+        Attributes.Dispose();
+        NewGraphics.Dispose();
+        return NewBitmap;
+    }
 
-    public static int[] calculateLUT(int[] values)
+    public static int[] calculateLUT(double[] values)
     {
         //poszukaj wartości minimalnej
         int minValue = 0;
@@ -235,8 +244,9 @@ public static class Algorithm
         return result;
     }
 
-    public static Bitmap StretchedHistogram(Bitmap bmp, int[] LUT)
+    public static Bitmap StretchedHistogram(Bitmap bmp, WpfPlot plot)
     {
+        int[] LUT = calculateLUT(getHistogramData(bmp, null)[0]);
         Bitmap newBmp = new Bitmap(bmp.Width, bmp.Height);
         for (int x = 0; x < bmp.Width; x++)
         {
@@ -247,6 +257,41 @@ public static class Algorithm
                 newBmp.SetPixel(x, y, newPixel);
             }
         }
-        return Histogram(newBmp.Width, newBmp.Height, getHistogramData(newBmp));
+        unsafe
+        {
+            BitmapData bitmapData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, bmp.PixelFormat);
+
+            int bytesPerPixel = System.Drawing.Bitmap.GetPixelFormatSize(bmp.PixelFormat) / 8;
+            int heightInPixels = bitmapData.Height;
+            int widthInBytes = bitmapData.Width * bytesPerPixel;
+            byte* PtrFirstPixel = (byte*)bitmapData.Scan0;
+
+
+            Parallel.For(0, heightInPixels, y =>
+            {
+                byte* currentLine = PtrFirstPixel + (y * bitmapData.Stride);
+                for (int x = 0; x < widthInBytes; x += bytesPerPixel)
+                {
+                    var color = Color.FromArgb(LUT[(currentLine[x] + currentLine[x + 1] + currentLine[x + 2]) / 3]);
+                    byte[] byteData = new byte[3] {color.R, color.G, color.B};
+                    currentLine[x] = (byte)byteData[2];
+                    currentLine[x + 1] = (byte)byteData[1];
+                    currentLine[x + 2] = (byte)byteData[0];
+                }
+            });
+            bmp.UnlockBits(bitmapData);
+            _ = getHistogramData(bmp, plot);
+            return bmp;
+            /*for (int y = 0; y < heightInPixels; y++)
+            {
+                byte* currentLine = PtrFirstPixel + (y * bitmapData.Stride);
+                for (int x = 0; x < widthInBytes; x = x + bytesPerPixel)
+                {
+                    currentLine[x] = (byte)LUTblue[currentLine[x]];
+                    currentLine[x + 1] = (byte)LUTgreen[currentLine[x + 1]];
+                    currentLine[x + 2] = (byte)LUTred[currentLine[x + 2]];
+                }
+            }*/
+        }
     }
 }

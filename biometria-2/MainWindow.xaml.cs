@@ -72,7 +72,7 @@ namespace biometria_2
             this.Close();
         }
 
-        private void EvenHistogram(object sender, RoutedEventArgs e)
+        private void EqualHistogram(object sender, RoutedEventArgs e)
         {
             if (sourceImage == null)
             {
@@ -82,6 +82,18 @@ namespace biometria_2
             Bitmap bitmap = new Bitmap(this.sourceImage.Width, this.sourceImage.Height);
             bitmap = (Bitmap)this.imageToEdit.Clone();
             newImage.Source = ImageSourceFromBitmap(Algorithm.EqualizeHistogram(bitmap, newHistPlot));
+        }
+
+        private void StretchedHistogram(object sender, RoutedEventArgs e)
+        {
+            if (sourceImage == null)
+            {
+                MessageBox.Show("You haven't uploaded any files", "Image error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            Bitmap bitmap = new Bitmap(this.sourceImage.Width, this.sourceImage.Height);
+            bitmap = (Bitmap)this.imageToEdit.Clone();
+            newImage.Source = ImageSourceFromBitmap(Algorithm.StretchedHistogram(bitmap, newHistPlot));
         }
 
         private void BrightnessValue_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
