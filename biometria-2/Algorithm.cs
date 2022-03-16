@@ -22,7 +22,7 @@ public static class Algorithm
         {
             for (int j = 0; j < histogram[i]; j++)
             {
-                int index = i * 3 + (height - 1 - j) * width*3;
+                int index = i * 3 + (height - 1 - j) * width * 3;
 
                 bmpData[index + 0] =
                 bmpData[index + 1] =
@@ -39,6 +39,7 @@ public static class Algorithm
 
         return data;
     }
+
 
     public static double[][] getHistogramData(Bitmap bmp, WpfPlot? histPlot)
     {
@@ -96,6 +97,7 @@ public static class Algorithm
         histPlot.Plot.AddScatter(xRow, histogramG, Color.Green);
 
         histPlot.Refresh();
+        
         return new double[][] { histogram, histogramB, histogramG, histogramR };
     }
 
@@ -118,7 +120,7 @@ public static class Algorithm
         for (int i = 0; i < 256; i++)
         {
             sum += (int)values[i];
-            result[i] = (int)((sum - minValue) / (size - minValue) * 255);//daje dobre efekty dla * size/500 zamiast 255, ale tylko dla czarnobiałych obrazów (normalnie jest 255.0)
+            result[i] = (int)((sum - minValue) / (size - minValue) * 255 *5)%255;//daje dobre efekty dla * size/500 zamiast 255, ale tylko dla czarnobiałych obrazów (normalnie jest 255.0)
         }
 
         return result;
@@ -168,18 +170,18 @@ public static class Algorithm
                 }
             }
         }
-    //gówno.... tak było oryginalnie
-    Bitmap newBitmap = new Bitmap(bitmap.Width, bitmap.Height, PixelFormat.Format24bppRgb);
-         for (int x = 0; x<bitmap.Width; x++)
-         {
-             for (int y = 0; y<bitmap.Height; y++)
-             {
-                 Color pixel = bitmap.GetPixel(x, y);
-    Color newPixel = Color.FromArgb(LUTred[pixel.R], LUTgreen[pixel.G], LUTblue[pixel.B]);
-    newBitmap.SetPixel(x, y, newPixel);
-             }
-         }
-         return newBitmap;
+        //gówno.... tak było oryginalnie
+        Bitmap newBitmap = new Bitmap(bitmap.Width, bitmap.Height, PixelFormat.Format24bppRgb);
+        for (int x = 0; x < bitmap.Width; x++)
+        {
+            for (int y = 0; y < bitmap.Height; y++)
+            {
+                Color pixel = bitmap.GetPixel(x, y);
+                Color newPixel = Color.FromArgb(LUTred[pixel.R], LUTgreen[pixel.G], LUTblue[pixel.B]);
+                newBitmap.SetPixel(x, y, newPixel);
+            }
+        }
+        return newBitmap;
 
     }
 
@@ -206,7 +208,7 @@ public static class Algorithm
         return NewBitmap;
     }
 
-    public static int[] calculateLUT(double[] values)
+    public static int[] calculateLUT(double[] values, int thresholdValue, int minval)
     {
         //poszukaj wartości minimalnej
         int minValue = 0;
@@ -232,21 +234,21 @@ public static class Algorithm
 
         //przygotuj tablice zgodnie ze wzorem
         int[] result = new int[256];
-        double a = 255.0 / (maxValue - minValue);
+        double a = 255.0 / (thresholdValue - minval);
         for (int i = 0; i < 256; i++)
         {
-            result[i] = (int)(a * (i - minValue));
+            result[i] = (int)(a * (i - minval));
         }
 
         return result;
     }
 
-    public static Bitmap StretchedHistogram(Bitmap bmp, WpfPlot plot)
+    public static Bitmap StretchedHistogram(Bitmap bmp, WpfPlot plot, int value=256, int value2=0)
     {
         double[][] histogramsData = getHistogramData(bmp, null);
-        int[] LUTblue = calculateLUT(histogramsData[1]);
-        int[] LUTgreen = calculateLUT(histogramsData[2]);
-        int[] LUTred = calculateLUT(histogramsData[3]);
+        int[] LUTblue = calculateLUT(histogramsData[1],value, value2);
+        int[] LUTgreen = calculateLUT(histogramsData[2],value, value2);
+        int[] LUTred = calculateLUT(histogramsData[3], value, value2);
 
         //Bitmap newBmp = new Bitmap(bmp.Width, bmp.Height);
         //for (int x = 0; x < bmp.Width; x++)
@@ -291,6 +293,85 @@ public static class Algorithm
                     currentLine[x + 2] = (byte)LUTred[currentLine[x + 2]];
                 }
             }*/
+        }
+    }
+
+    public static Bitmap GetOtsu(Bitmap bmp, WpfPlot plot)
+    {
+        double[] histogram = getHistogramData(bmp, null)[0];
+
+        double avgValue = 0;
+
+        for (int i = 0; i < 256; i++)
+        {
+            avgValue += histogram[i];
+        }
+
+        avgValue /= histogram.Length;
+
+
+        ////Global mean
+        //double mg = 0;
+        //for (int i = 0; i < 255; i++)
+        //{
+        //    mg += i * histogram[i];
+        //}
+
+        ////Get max between-class variance
+        //double bcv = 0;
+        //int threshold = 0;
+        //for (int i = 0; i < 256; i++)
+        //{
+        //    double cs = 0;
+        //    double m = 0;
+        //    for (int j = 0; j < i; j++)
+        //    {
+        //        cs += histogram[j];
+        //        m += j * histogram[j];
+        //    }
+
+        //    if (cs == 0)
+        //    {
+        //        continue;
+        //    }
+
+        //    double old_bcv = bcv;
+        //    bcv = Math.Max(bcv, Math.Pow(mg * cs - m, 2) / (cs * (1 - cs)));
+
+        //    if (bcv > old_bcv)
+        //    {
+        //        threshold = i;
+        //    }
+        //}
+
+
+        unsafe
+        {
+            BitmapData bitmapData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, bmp.PixelFormat);
+
+            int bytesPerPixel = Image.GetPixelFormatSize(bmp.PixelFormat) / 8;
+            int heightInPixels = bitmapData.Height;
+            int widthInBytes = bitmapData.Width * bytesPerPixel;
+            byte* PtrFirstPixel = (byte*)bitmapData.Scan0;
+
+
+            Parallel.For(0, heightInPixels, y =>
+            {
+                byte* currentLine = PtrFirstPixel + (y * bitmapData.Stride);
+                for (int x = 0; x < widthInBytes; x += bytesPerPixel)
+                {
+                    if((currentLine[x] + currentLine[x + 1] + currentLine[x + 2]/3) > avgValue)
+                        currentLine[x] = currentLine[x + 1] = currentLine[x + 2] = byte.MaxValue;
+                    else
+                        currentLine[x] = currentLine[x + 1] = currentLine[x + 2] = byte.MinValue;
+
+
+                }
+            });
+            bmp.UnlockBits(bitmapData);
+            _ = getHistogramData(bmp, plot);
+
+            return bmp;
         }
     }
 }

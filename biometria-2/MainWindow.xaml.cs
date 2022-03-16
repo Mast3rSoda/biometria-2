@@ -116,6 +116,22 @@ namespace biometria_2
                 MessageBox.Show("You haven't uploaded any files", "Image error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+            Bitmap bitmap = new Bitmap(this.sourceImage.Width, this.sourceImage.Height);
+            bitmap = (Bitmap)this.imageToEdit.Clone();
+            newImage.Source = ImageSourceFromBitmap(Algorithm.GetOtsu(bitmap, newHistPlot));
+
+        }
+
+        private void ZakresValue_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (sourceImage == null)
+            {
+                MessageBox.Show("You haven't uploaded any files", "Image error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            Bitmap bitmap = new Bitmap(this.sourceImage.Width, this.sourceImage.Height);
+            bitmap = (Bitmap)this.imageToEdit.Clone();
+            newImage.Source = ImageSourceFromBitmap(Algorithm.StretchedHistogram(bitmap, newHistPlot, (int)ZakresValue.Value, (int)ZakresLowValue.Value));
         }
     }
 
